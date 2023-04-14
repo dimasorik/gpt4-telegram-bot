@@ -16,10 +16,13 @@ from openai_constants import ROLE_FILED_NAME, CONTENT_FIELD_NAME, OPENAI_TOKEN_N
 from telegram_constants import TELEGRAM_TOKEN_NAME
 
 RESTART_COMMAND = "restart"
+HELP_COMMAND = "help"
 
 logging.basicConfig(level=logging.DEBUG)
 
 chat_messages = []
+
+model = os.environ.get("GPT_MODEL", GPT_4_MODEL)
 
 
 async def process_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -37,7 +40,7 @@ async def process_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 def generate_gpt_response():
-    completion = openai.ChatCompletion.create(model=GPT_4_MODEL, messages=chat_messages)
+    completion = openai.ChatCompletion.create(model=model, messages=chat_messages)
     return completion.choices[0].message[CONTENT_FIELD_NAME]
 
 
@@ -47,6 +50,16 @@ async def restart_chat(update, context):
         chat_id=update.effective_chat.id, text="Restarting conversation"
     )
     return chat_messages
+
+
+async def help_message(update, context):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id, text="""
+        Currently available bot commands:
+            1. /restart - reset chat history with GPT
+            2. /help - display help
+        """
+    )
 
 
 def append_chat(content, role):
@@ -74,6 +87,8 @@ if __name__ == "__main__":
     bot_application.add_handler(text_handler)
 
     bot_application.add_handler(CommandHandler(RESTART_COMMAND, restart_chat))
+
+    bot_application.add_handler(CommandHandler(HELP_COMMAND, help_message))
 
     bot_application.run_polling()
     logging.debug("Application successfully started")
