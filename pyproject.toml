@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "gpt4-telegram-bot"
+version = "0.1.0"
+description = ""
+authors = ["Dmytro Sorochynskyi <dmytro.sorochynskyi@opower.com>"]
+readme = "README.md"
+packages = [{include = "gpt4_telegram_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openai = "^0.27.2"
+python-telegram-bot="^20.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

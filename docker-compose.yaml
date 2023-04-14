@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  kong:
+    container_name: gpt4_telegram_bot
+    build:
+      context: $PWD
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_TOKEN=<FILL_ME_IN>
+      - OPENAI_TOKEN=<FILL_ME_IN>
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "1"
+          memory: 256M
+    networks:
+      - default
+
+  default:
+    external: false
+    name: kong-net
