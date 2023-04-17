@@ -20,36 +20,52 @@ HELP_COMMAND = "help"
 
 logging.basicConfig(level=logging.DEBUG)
 
-chat_messages = []
+chat_map = {}  # Should be Redis or some other key-value storage
 
 model = os.environ.get("GPT_MODEL", GPT_4_MODEL)
 
 
+async def reset_history_if_required(chat_id, context):
+    chat_messages = chat_map.get(chat_id, [])
+    if len(chat_messages) >= 10:
+        await context.bot.send_message(
+            chat_id=chat_id, text="Limit of history reached, resetting conversation"
+        )
+        chat_map[chat_id] = []
+
+
 async def process_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.debug("Processing text message")
+    chat_id = update.effective_chat.id
+
+    await reset_history_if_required(chat_id, context)
+
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, text="Generating GPT-4 response"
+        chat_id=chat_id, text="Generating GPT-4 response"
     )
-    append_chat(update.message.text, ROLE_USER)
 
-    gpt4_response_text = generate_gpt_response()
+    append_chat(chat_id, update.message.text, ROLE_USER)
 
-    append_chat(gpt4_response_text, ROLE_ASSISTANT)
+    chat_messages = chat_map.get(chat_id)
+    gpt4_response_text = generate_gpt_response(chat_messages)
 
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=gpt4_response_text)
+    append_chat(chat_id, gpt4_response_text, ROLE_ASSISTANT)
+
+    await context.bot.send_message(chat_id=chat_id, text=gpt4_response_text)
 
 
-def generate_gpt_response():
+def generate_gpt_response(chat_messages):
     completion = openai.ChatCompletion.create(model=model, messages=chat_messages)
     return completion.choices[0].message[CONTENT_FIELD_NAME]
 
 
 async def restart_chat(update, context):
-    clear_history()
+    chat_id = update.effective_chat.id
+    clear_history(chat_id)
     await context.bot.send_message(
         chat_id=update.effective_chat.id, text="Restarting conversation"
     )
-    return chat_messages
+    return []
 
 
 async def help_message(update, context):
@@ -62,14 +78,18 @@ async def help_message(update, context):
     )
 
 
-def append_chat(content, role):
+def append_chat(chat_id, content, role):
+    chat_messages = chat_map.get(chat_id, [])
     chat_messages.append({ROLE_FILED_NAME: role, CONTENT_FIELD_NAME: content})
+    chat_map[chat_id] = chat_messages
     return chat_messages
 
 
-def clear_history():
+def clear_history(chat_id):
     logging.debug("resetting chat")
+    chat_messages = chat_map.get(chat_id, [])
     chat_messages.clear()
+    chat_map[chat_id] = chat_messages
     return chat_messages
 
 

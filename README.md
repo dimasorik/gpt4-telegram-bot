@@ -13,7 +13,7 @@ This project is using [python-poetry](https://python-poetry.org/) as a PYTHON PA
 ### Running project locally
 1. Checkout && cd to the project's folder
 2. Install dependencies `poetry install`
-3. Export env variables `export TELEGRAM_TOKEN=token && export OPENAI_TOKEN_NAME=token`
+3. Export env variables `export TELEGRAM_TOKEN=token && export OPENAI_TOKEN=token`
 4. Run `poetry run python gpt4_telegram_bot/gpt4_telegram_bot.py`
 ### Building and running docker image
 1. Set the tokens inside `docker-compose.yaml`
@@ -22,7 +22,7 @@ This project is using [python-poetry](https://python-poetry.org/) as a PYTHON PA
 ## Functionality 
 The current features of the bot: 
 1. Pass the complete text chat to the OpenAI's GPT-4  and forwarding reply to it
-2. Reset the chat hystory with `/restart` command
+2. Reset the chat history with `/restart` command
 
 ### Bot commands
 Currenty supported commands: 
