@@ -2,6 +2,7 @@ import logging
 import os
 
 import openai
+from pathlib import Path
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -10,6 +11,9 @@ from telegram.ext import (
     filters,
     CommandHandler,
 )
+
+from better_profanity import profanity
+from better_profanity.utils import get_complete_path_of_file, read_wordlist
 
 from openai_constants import ROLE_FILED_NAME, CONTENT_FIELD_NAME, OPENAI_TOKEN_NAME, GPT_4_MODEL, \
     ROLE_USER, ROLE_ASSISTANT
@@ -44,7 +48,9 @@ async def process_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
         chat_id=chat_id, text="Generating GPT-4 response"
     )
 
-    append_chat(chat_id, update.message.text, ROLE_USER)
+    censored_user_message = profanity.censor(update.message.text)
+
+    append_chat(chat_id, censored_user_message, ROLE_USER)
 
     chat_messages = chat_map.get(chat_id)
     gpt4_response_text = generate_gpt_response(chat_messages)
@@ -97,6 +103,8 @@ if __name__ == "__main__":
     logging.debug("Starting application")
     telegram_token = os.environ[TELEGRAM_TOKEN_NAME]
     openai.api_key = os.environ[OPENAI_TOKEN_NAME]
+
+    profanity.load_censor_words(custom_words=read_wordlist(os.path.dirname(os.path.realpath(__file__)) + "/resources/profanity_wordlist.txt"))
 
     bot_application = ApplicationBuilder().token(telegram_token).build()
 

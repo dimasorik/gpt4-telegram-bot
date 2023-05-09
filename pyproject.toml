@@ -10,6 +10,7 @@ packages = [{include = "gpt4_telegram_bot"}]
 python = "^3.9"
 openai = "^0.27.2"
 python-telegram-bot="^20.1"
+better-profanity="^0.7.0"
 
 
 [build-system]
