@@ -22,7 +22,7 @@ from telegram_constants import TELEGRAM_TOKEN_NAME
 RESTART_COMMAND = "restart"
 HELP_COMMAND = "help"
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 chat_map = {}  # Should be Redis or some other key-value storage
 
