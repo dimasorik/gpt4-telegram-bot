@@ -1,11 +1,8 @@
 version: "3"
 
 services:
-  kong:
-    container_name: gpt4_telegram_bot
-    build:
-      context: $PWD
-      dockerfile: Dockerfile
+  gpt-telegram-bot:
+    image: dimasorik/gpt-4-telegram-bot:1.0.0
     environment:
       - TELEGRAM_TOKEN=<FILL_ME_IN>
       - OPENAI_TOKEN=<FILL_ME_IN>
@@ -18,8 +15,7 @@ services:
           cpus: "1"
           memory: 256M
     networks:
-      - default
+      - webnet
 
-  default:
-    external: false
-    name: kong-net
+networks:
+  webnet:

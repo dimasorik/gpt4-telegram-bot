@@ -16,13 +16,17 @@ ENV PATH="${PATH}:${POETRY_VENV}/bin"
 
 WORKDIR /app
 
-COPY poetry.lock pyproject.toml ./
+COPY poetry.lock pyproject.toml README.md ./
 # [OPTIONAL] Validate the project is properly configured
 RUN poetry check
 
-# Install Dependencies
+RUN pwd
+
+RUN ls -lah
+
+COPY ./gpt4_telegram_bot/ ./gpt4_telegram_bot/
+
 RUN poetry install --no-interaction --no-cache --without dev
 
-COPY ./gpt4_telegram_bot/* ./app
 # Run your app
-CMD [ "poetry", "run", "python", "gpt4_telegram_bot.py" ]
+CMD [ "poetry", "run", "python", "gpt4_telegram_bot/gpt4_telegram_bot.py" ]
