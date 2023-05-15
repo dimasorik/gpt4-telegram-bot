@@ -3,10 +3,6 @@ import os
 
 import openai
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from threading import Thread
-
-from pathlib import Path
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -16,12 +12,13 @@ from telegram.ext import (
     CommandHandler,
 )
 
-from better_profanity import profanity
-from better_profanity.utils import get_complete_path_of_file, read_wordlist
-
 from openai_constants import ROLE_FILED_NAME, CONTENT_FIELD_NAME, OPENAI_TOKEN_NAME, GPT_4_MODEL, \
     ROLE_USER, ROLE_ASSISTANT
 from telegram_constants import TELEGRAM_TOKEN_NAME
+
+from healtcheck_service import HealtCheckServer
+
+from profanity_filter import profanity_filter
 
 RESTART_COMMAND = "restart"
 HELP_COMMAND = "help"
@@ -31,44 +28,6 @@ logging.basicConfig(level=logging.INFO)
 chat_map = {}  # Should be Redis or some other key-value storage
 
 model = os.environ.get("GPT_MODEL", GPT_4_MODEL)
-
-
-class S(BaseHTTPRequestHandler):
-    def _set_response(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-    def do_GET(self):
-        logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-        self._set_response()
-        self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
-
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-        post_data = self.rfile.read(content_length) # <--- Gets the data itself
-        logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
-                str(self.path), str(self.headers), post_data.decode('utf-8'))
-
-        self._set_response()
-        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
-
-def run_http_server(server_class=HTTPServer, handler_class=S, port=8000):
-    logging.basicConfig(level=logging.INFO)
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    logging.info('Starting httpd...\n')
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    httpd.server_close()
-    logging.info('Stopping httpd...\n')
-
-def SeparateServer():
-    thread = Thread(target=run_http_server)
-    thread.setDaemon(True)
-    thread.start()
 
 
 async def reset_history_if_required(chat_id, context):
@@ -90,7 +49,7 @@ async def process_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
         chat_id=chat_id, text="Generating GPT-4 response"
     )
 
-    censored_user_message = profanity.censor(update.message.text)
+    censored_user_message = profanity_filter.censor(update.message.text)
 
     append_chat(chat_id, censored_user_message, ROLE_USER)
 
@@ -146,8 +105,6 @@ if __name__ == "__main__":
     telegram_token = os.environ[TELEGRAM_TOKEN_NAME]
     openai.api_key = os.environ[OPENAI_TOKEN_NAME]
 
-    profanity.load_censor_words(custom_words=read_wordlist(os.path.dirname(os.path.realpath(__file__)) + "/resources/profanity_wordlist.txt"))
-
     bot_application = ApplicationBuilder().token(telegram_token).build()
 
     text_handler = MessageHandler(
@@ -160,9 +117,8 @@ if __name__ == "__main__":
 
     bot_application.add_handler(CommandHandler(HELP_COMMAND, help_message))
 
-    server = SeparateServer()
+    server = HealtCheckServer()
 
     bot_application.run_polling()
-    
 
-    logging.debug("Application successfully started")
+    logging.info("Application successfully started")
