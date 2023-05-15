@@ -2,10 +2,7 @@ version: "3"
 
 services:
   gpt-telegram-bot:
-    image: dimasorik/gpt-4-telegram-bot:1.0.0
-    environment:
-      - TELEGRAM_TOKEN=<FILL_ME_IN>
-      - OPENAI_TOKEN=<FILL_ME_IN>
+    image: europe-west4-docker.pkg.dev/telegram-gpt-pot/docker-hub/gpt4-telegram-bot:1.0.2
     deploy:
       resources:
         limits:
@@ -14,6 +11,8 @@ services:
         reservations:
           cpus: "1"
           memory: 256M
+    ports: 
+      - "8000:8000"
     networks:
       - webnet
 
